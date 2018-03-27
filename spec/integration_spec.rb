@@ -5,8 +5,7 @@ describe do
     browser = Watir::Browser.new
     browser.goto TEST_APP_URL
     sleep 1
-    assert { browser.url == "#{AUTH_SERVER_URL}/"
-    sleep 10
+    assert { browser.text == '8081' }
   end
 
   after do

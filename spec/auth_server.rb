@@ -1,11 +1,11 @@
 require 'hobby'
+require 'awesome_print'
 
 class AuthServer
   include Hobby
 
   get do
-    require 'awesome_print'
     ap env
-    env
+    env['SERVER_PORT']
   end
 end

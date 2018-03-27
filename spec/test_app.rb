@@ -6,7 +6,7 @@ class TestApp
 
   use Rack::Session::Cookie, secret: SecureRandom.hex(64)
   use Hobby::SSO::Guard, auth_server: AUTH_SERVER_URL,
-    sessions: $sessions, tickets: $tickets, guest_tokens: $tokens
+    sessions: $sessions, tickets: $tickets, tokens: $tokens
 
   get do
     'test app root'

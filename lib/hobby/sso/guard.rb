@@ -5,37 +5,46 @@ module Hobby
     class Guard
       # sessions: { session_id => user_id }
       # tickets: { ticket => session_id } should expire quickly(20 seconds or so)
-      # guest_tokens: { token => latest_visited_path }
-      def initialize app, sessions:, tickets:, guest_tokens:, auth_server:
-        @app, @sessions, @guest_tokens = app, sessions, guest_tokens
+      # tokens: { token => latest_visited_path }
+      def initialize app, sessions:, tickets:, tokens:, auth_server:
+        @app, @sessions, @tokens = app, sessions, tokens
         @auth_server = auth_server
-        @enter_app = Enter.new tickets, guest_tokens
+        @enter_app = Enter.new tickets, tokens
       end
 
       def call env
-        if active_session? env
+        @env = env
+
+        if active_session?
           @app.call env
         else
           if env['PATH_INFO'] == '/enter'
             @enter_app.call env
           else
-            create_guest_token env
-            [302, { 'Location' => @auth_server }, []]
+            redirect_to_auth_server_with_token create_guest_token
           end
         end
       end
 
       private
-        def active_session? env
+        attr_reader :env
+
+        def active_session?
           session = env['rack.session']
           @sessions.exists session[:id]
         end
 
-        def create_guest_token env
-          token = SecureRandom.uuid
+        def create_guest_token
+          token = SecureRandom.urlsafe_base64 64
           env['rack.session'][:guest_token] = token
-          @guest_tokens.hset token, 'path', env['PATH_INFO']
-          @guest_tokens.hset token, 'query', env['QUERY_STRING']
+          @tokens.hset token, 'path', env['PATH_INFO']
+          @tokens.hset token, 'query', env['QUERY_STRING']
+          token
+        end
+
+        def redirect_to_auth_server_with_token token
+          location = "#{@auth_server}?service=#{env['HTTP_HOST']}&token=#{token}"
+          [302, { 'Location' => location }, []]
         end
     end
   end
