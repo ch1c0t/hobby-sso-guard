@@ -21,7 +21,8 @@ module Hobby
           if env['PATH_INFO'] == '/enter'
             @enter_app.call env
           else
-            redirect_to_auth_server_with_token create_guest_token
+            create_guest_token
+            redirect_to_auth_server
           end
         end
       end
@@ -42,8 +43,8 @@ module Hobby
           token
         end
 
-        def redirect_to_auth_server_with_token token
-          location = "#{@auth_server}?service=#{env['HTTP_HOST']}&token=#{token}"
+        def redirect_to_auth_server
+          location = "#{@auth_server}?service=#{env['HTTP_HOST']}"
           [302, { 'Location' => location }, []]
         end
     end
